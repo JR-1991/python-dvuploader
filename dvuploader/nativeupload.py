@@ -265,6 +265,10 @@ async def _update_metadata(
 
     for file in files:
         dv_path = os.path.join(file.directory_label, file.file_name)  # type: ignore
+        has_tab_equivalent = _has_tab_equivalent(file.file_name, file_mapping.keys())  # type: ignore
+
+        if has_tab_equivalent and not dv_path.endswith(".tab"):
+            dv_path = os.path.splitext(dv_path)[0] + ".tab"
 
         try:
             file_id = file_mapping[dv_path]
@@ -285,6 +289,12 @@ async def _update_metadata(
         tasks.append(task)
 
     await asyncio.gather(*tasks)
+
+
+def _has_tab_equivalent(filename: str, filenames: List[str]) -> bool:
+    """Returns True if the filename has a tab extension."""
+    name = os.path.splitext(filename)[0]
+    return any(f"{name}.tab" == fname for fname in filenames)
 
 
 @tenacity.retry(
